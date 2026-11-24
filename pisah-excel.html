@@ -3,206 +3,211 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pisah Excel V2 - SOZO</title>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<title>Pisah Excel V5 - Persis Contoh</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
- *{box-sizing:border-box;font-family:Arial,sans-serif}
- body{margin:0;background:#f4f6f8;padding:12px}
+ *{box-sizing:border-box;font-family:Arial,sans-serif} body{margin:0;background:#f4f6f8;padding:12px}
  .card{background:#fff;border-radius:16px;padding:18px;max-width:980px;margin:auto;box-shadow:0 2px 12px rgba(0,0,0,.08)}
  h1{margin:0;font-size:22px} p.sub{color:#666;font-size:13px;margin:6px 0 14px}
- label{font-size:12px;font-weight:bold}
- input,select{width:100%;padding:11px;margin-top:5px;border:1px solid #ddd;border-radius:9px;font-size:14px}
+ label{font-size:12px;font-weight:bold} select{width:100%;padding:11px;margin-top:5px;border:1px solid #ddd;border-radius:9px;font-size:14px}
  .drop{border:2px dashed #2563eb;border-radius:12px;padding:22px;text-align:center;background:#eff6ff;cursor:pointer}
  .btn{width:100%;padding:13px;border:0;border-radius:10px;color:#fff;font-weight:bold;font-size:15px;margin-top:10px;cursor:pointer}
- .green{background:#059669}.blue{background:#2563eb}.dark{background:#111}
- .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
- @media(max-width:600px){.row{grid-template-columns:1fr}}
+ .green{background:#059669}.blue{background:#2563eb}
  .group{border:1px solid #eee;border-radius:12px;padding:12px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:10px}
  .dl{background:#059669;color:#fff;border:0;padding:9px 14px;border-radius:8px;cursor:pointer;font-weight:bold;white-space:nowrap}
- .badge{background:#111;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px}
- table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}
- th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;white-space:nowrap}
- th{background:#f8f8f8}
- .info{background:#fef3c7;border:1px solid #fde68a;padding:12px;border-radius:10px;font-size:13px;margin-top:12px}
+ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px} th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;white-space:nowrap} th{background:#f8f8f8}
+ .info{background:#e0f2fe;border:1px solid #bae6fd;padding:12px;border-radius:10px;font-size:13px;margin-top:12px}
+ .contoh{background:#f0fdf4;border:1px solid #bbf7d0;padding:10px;border-radius:10px;font-size:12px;margin-top:10px;word-break:break-all}
+ .bar{height:8px;background:#eee;border-radius:20px;overflow:hidden;margin-top:8px} .bar i{display:block;height:100%;background:#2563eb;width:0%}
 </style>
 </head>
 <body>
 <div class="card">
- <h1>✂️ Pisah Excel Otomatis V2</h1>
- <p class="sub">Natasha Skin Clinic • File Kakak: transaction_date, branch_name, doctor, komisi</p>
-
- <label>1. Upload File Excel</label>
- <div class="drop" onclick="document.getElementById('file').click()">
-   <div style="font-size:30px">📂</div>
-   <div id="fileName"><b>Klik untuk pilih file</b><br><small>.xlsx / .xls / .csv</small></div>
- </div>
- <input type="file" id="file" accept=".xlsx,.xls,.csv" hidden onchange="bacaFile(event)">
-
- <div class="row">
-  <div>
-   <label>2. Pisahkan Berdasarkan:</label>
-   <select id="modePisah" onchange="buatGrup()">
-     <option value="doctor">👩‍⚕️ Per Dokter (doctor)</option>
-     <option value="branch_name">🏥 Per Cabang (branch_name)</option>
-     <option value="doctor+branch">👩‍⚕️ + 🏥 Per Dokter + Cabang</option>
-     <option value="doctor+bulan">👩‍⚕️ + 📅 Per Dokter + Bulan</option>
-     <option value="branch+bulan">🏥 + 📅 Per Cabang + Bulan</option>
-     <option value="bulan">📅 Per Bulan Saja</option>
-   </select>
-  </div>
-  <div>
-   <label>3. Format Nama File Hasil:</label>
-   <select id="modeNama">
-     <option value="simple">Hanifa Safira.xlsx</option>
-     <option value="lengkap">ARTERI - Hanifa Safira - Nov 2026.xlsx</option>
-   </select>
-  </div>
- </div>
-
- <div id="infoAwal" class="info">💡 <b>Cara pakai:</b> Download dari Google Sheets (File > Download > Excel) → Upload di sini → Pilih <b>Per Dokter</b> → Klik <b>Download Semua (ZIP)</b>. Beres, nggak perlu pisah manual lagi!</div>
-
+ <h1>✂️ Pisah Excel V5 - Persis Contoh</h1>
+ <p class="sub">Hasilnya: header kuning + TOTAL + rekap bawah, kayak file <b>Komisi_Dokter_MKS_November_26_Muhammad_ihsan.xlsx</b></p>
+ <label>1. Upload File Gabungan (1 file semua dokter)</label>
+ <div class="drop" onclick="document.getElementById('file').click()"><div style="font-size:30px">📂</div><div id="fileName"><b>Klik untuk pilih file</b><br><small>.xlsx</small></div><div class="bar"><i id="prog"></i></div><small id="statusTxt" style="color:#666"></small></div>
+ <input type="file" id="file" accept=".xlsx" hidden onchange="bacaFile(event)">
+ <div class="info">💡 <b>File gabungan harus punya kolom:</b> <code>transaction_date | period_month | branch_name | ... | Nama Dokter | Komisi</code> — sama kayak file contoh Kakak. Nanti otomatis ke-pisah per dokter + per cabang + per periode.</div>
+ <div class="contoh" id="contohNama" style="display:none"><b>Preview nama file:</b><br><span id="listNamaPreview"></span></div>
  <div id="hasil" style="display:none">
-   <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
-     <div><b id="totalInfo"></b><br><small id="totalDuit" style="color:#666"></small></div>
-     <span class="badge" id="namaKolom"></span>
-   </div>
-   <button class="btn green" onclick="downloadSemua()">📦 Download Semua (ZIP)</button>
-   <button class="btn blue" onclick="downloadRekap()">📊 Download Rekap (1 File, Banyak Sheet)</button>
+   <div style="margin-top:16px"><b id="totalInfo"></b><br><small id="totalDuit" style="color:#666"></small></div>
+   <button class="btn green" onclick="downloadSemua()">📦 Download Semua (ZIP) - Nama + Isi Udah Persis</button>
    <div id="listGrup"></div>
-   <div style="margin-top:16px"><b>Preview (8 kolom pertama)</b><div style="overflow-x:auto"><table><thead id="headPreview"></thead><tbody id="bodyPreview"></tbody></table></div></div>
  </div>
- <p style="text-align:center;color:#999;font-size:11px;margin-top:14px">Diproses di HP Kakak saja, tidak dikirim ke server • Aman</p>
+ <p style="text-align:center;color:#999;font-size:11px;margin-top:14px">Diproses di HP Kakak saja • Aman</p>
 </div>
-
 <script>
-let headers=[], rows=[], grouped={}, fileAsal='data';
-let idx = {doctor:-1, branch_name:-1, transaction_date:-1, komisi:-1, net:-1};
-
-function bacaFile(e){
- let f=e.target.files[0]; if(!f) return;
- fileAsal=f.name.replace(/\.[^/.]+$/,'');
- document.getElementById('fileName').innerHTML='<b>✅ '+f.name+'</b><br><small>Membaca...</small>';
- let r=new FileReader();
- r.onload=function(ev){
-  let wb=XLSX.read(ev.target.result,{type:'array'});
-  let ws=wb.Sheets[wb.SheetNames[0]];
-  // Pakai array (header:1) biar kolom kembar potong_bahan tidak hilang
-  let aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
-  // Cari baris header yang ada kata 'doctor'
-  let hRow=aoa.findIndex(row=>row.some(c=>String(c).toLowerCase().includes('doctor')));
-  if(hRow===-1) hRow=0;
-  headers=aoa[hRow].map((h,i)=> h ? String(h).trim() : 'kolom_'+(i+1));
-  // Kalau ada nama kembar, kasih angka biar beda: potong_bahan, potong_bahan_2
-  let seen={};
-  headers=headers.map(h=>{ if(seen[h]){ seen[h]++; return h+'_'+seen[h]; } seen[h]=1; return h; });
-  rows=aoa.slice(hRow+1).filter(row=>row.some(c=>String(c).trim()!==''));
-  // Cari index kolom penting
-  idx.doctor=headers.findIndex(h=>h.toLowerCase().includes('doctor'));
-  idx.branch_name=headers.findIndex(h=>h.toLowerCase().includes('branch'));
-  idx.transaction_date=headers.findIndex(h=>h.toLowerCase().includes('transaction_date')||h.toLowerCase().includes('date'));
-  idx.komisi=headers.findIndex(h=>h.toLowerCase()==='komisi'||h.toLowerCase().includes('komisi'));
-  idx.net=headers.findIndex(h=>h.toLowerCase().includes('net_sell'));
-  document.getElementById('fileName').innerHTML='<b>✅ '+f.name+'</b><br><small>'+rows.length+' baris • '+headers.length+' kolom • Dokter: '+(idx.doctor+1)+', Cabang: '+(idx.branch_name+1)+', Komisi: '+(idx.komisi+1)+'</small>';
-  buatGrup();
- };
- r.readAsArrayBuffer(f);
+let headers=[], rows=[], grouped={}, metaGrup={}, origStyles={};
+let idx={dokter:-1,cabang:-1,period:-1,komisi:-1,docReff:-1,invoice:-1};
+function setProg(p,t){document.getElementById('prog').style.width=p+'%';document.getElementById('statusTxt').innerText=t||'';}
+// MAKASSAR -> MKS, ARTERI -> ARTERI, dll. Kalau tidak ada di daftar, ambil dari invoice D-MKS-I-...
+const KODE_CABANG={'MAKASSAR':'MKS','MAKASAR':'MKS','PONTIANAK':'PTK','PONTIANAK ARTERI':'ARTERI','ARTERI':'ARTERI','SINGKAWANG':'SKW','KETAPANG':'KTP'};
+function kodeCabang(cabang, invoice){
+  let c=String(cabang||'').trim().toUpperCase();
+  if(KODE_CABANG[c]) return KODE_CABANG[c];
+  // Coba dari invoice D-MKS-I-202611-xxxx -> MKS
+  let m=String(invoice||'').match(/^[A-Z]-([A-Z]+)-/);
+  if(m) return m[1];
+  // Fallback: 3 huruf pertama
+  return c.replace(/[^A-Z]/g,'').slice(0,3)||'MKS';
 }
-
-function bulanDari(tgl){
- let s=String(tgl||'').trim(); if(!s) return 'Tanpa Tanggal';
- let d=new Date(s); if(!isNaN(d)) return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
- if(s.length>=7) return s.slice(0,7); return s;
+function keUnderscore(s){return String(s||'').trim().replace(/['’`]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');}
+function bulanInfo(d){
+  let names=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  let dt = d instanceof Date ? d : new Date(d);
+  if(isNaN(dt)) dt=new Date();
+  return {bulan:names[dt.getMonth()], tahun2:String(dt.getFullYear()).slice(-2), tahunFull:String(dt.getFullYear())};
 }
-function kunciGrup(row){
- let mode=document.getElementById('modePisah').value;
- let dok= idx.doctor>=0 ? String(row[idx.doctor]||'').trim()||'(Tanpa Dokter)' : '';
- let cab= idx.branch_name>=0 ? String(row[idx.branch_name]||'').trim()||'(Tanpa Cabang)' : '';
- let bln= idx.transaction_date>=0 ? bulanDari(row[idx.transaction_date]) : '';
- if(mode==='doctor') return dok;
- if(mode==='branch_name') return cab;
- if(mode==='doctor+branch') return dok+' | '+cab;
- if(mode==='doctor+bulan') return dok+' | '+bln;
- if(mode==='branch+bulan') return cab+' | '+bln;
- if(mode==='bulan') return bln;
- return dok;
+async function bacaFile(e){
+  let f=e.target.files[0]; if(!f) return;
+  setProg(15,'Membaca '+f.name+'...');
+  document.getElementById('fileName').innerHTML='<b>✅ '+f.name+'</b><br><small>Diproses...</small>';
+  try{
+    let buf=await f.arrayBuffer();
+    let wb=new ExcelJS.Workbook(); await wb.xlsx.load(buf);
+    let ws=wb.worksheets[0];
+    // Header baris 1
+    headers=[]; origStyles={};
+    ws.getRow(1).eachCell((c,col)=>{ headers[col-1]=String(c.value||'').trim(); origStyles[col-1]={numFmt:c.numFmt, font:c.font, fill:c.fill, alignment:c.alignment, border:c.border}; });
+    // Cari index (1-based untuk ExcelJS, 0-based untuk array kita)
+    let findIdx=(...names)=> headers.findIndex(h=> names.some(n=> h.toLowerCase().includes(n)));
+    idx.dokter=findIdx('nama dokter','doctor'); idx.cabang=findIdx('branch_name'); idx.period=findIdx('period_month','commission_period'); idx.komisi=findIdx('komisi'); idx.docReff=findIdx('doc_reff'); idx.invoice=findIdx('invoice_number');
+    rows=[];
+    ws.eachRow((row, rnum)=>{
+      if(rnum===1) return;
+      let vals=[]; row.eachCell((c,col)=>{ vals[col-1]=c.value; });
+      // Skip baris TOTAL / baris rekap / baris kosong (kayak di file contoh baris 39-42)
+      let teks=vals.map(v=>String(v||'')).join(' ').toLowerCase();
+      if(teks.includes('total komisi')||teks.includes('sum of komisi')||teks.includes('branch_name')&&teks.includes('doc name')) return;
+      if(vals.every(v=>v===undefined||v===null||String(v).trim()==='')) return;
+      // Simpan juga format per sel biar tidak hilang
+      let fmts=[]; row.eachCell((c,col)=>{ fmts[col-1]=c.numFmt; });
+      rows.push({vals:vals, fmts:fmts});
+    });
+    setProg(100,'Selesai! '+rows.length+' baris data.');
+    document.getElementById('fileName').innerHTML='<b>✅ '+f.name+'</b><br><small>'+rows.length+' baris data • '+headers.length+' kolom • Dokter: '+(idx.dokter+1)+', Cabang: '+(idx.cabang+1)+', Komisi: '+(idx.komisi+1)+'</small>';
+    buatGrup();
+  }catch(err){ alert('Gagal baca: '+err.message); }
+}
+function namaFileFinal(meta){
+  return 'Komisi_Dokter_'+meta.kodeCabang+'_'+meta.bulan+'_'+meta.tahun2+'_'+keUnderscore(meta.dokter);
 }
 function buatGrup(){
- if(!rows.length) return;
- grouped={};
- rows.forEach(r=>{ let k=kunciGrup(r); if(!grouped[k]) grouped[k]=[]; grouped[k].push(r); });
- document.getElementById('hasil').style.display='block';
- let mode=document.getElementById('modePisah').value;
- document.getElementById('namaKolom').innerText='Mode: '+mode;
- let totalKomisi=0, totalNet=0;
- Object.values(grouped).forEach(arr=>arr.forEach(r=>{
-   if(idx.komisi>=0) totalKomisi+=Number(String(r[idx.komisi]).replace(/[^0-9.-]/g,''))||0;
-   if(idx.net>=0) totalNet+=Number(String(r[idx.net]).replace(/[^0-9.-]/g,''))||0;
- }));
- document.getElementById('totalInfo').innerText=Object.keys(grouped).length+' grup • '+rows.length+' total baris';
- document.getElementById('totalDuit').innerText='Total Komisi Semua: Rp '+totalKomisi.toLocaleString('id-ID')+' • Total Net Sell: Rp '+totalNet.toLocaleString('id-ID');
-
- let html='';
- Object.keys(grouped).sort().forEach(k=>{
-   let arr=grouped[k]; let tk=0, tn=0;
-   arr.forEach(r=>{
-     if(idx.komisi>=0) tk+=Number(String(r[idx.komisi]).replace(/[^0-9.-]/g,''))||0;
-     if(idx.net>=0) tn+=Number(String(r[idx.net]).replace(/[^0-9.-]/g,''))||0;
-   });
-   html+=`<div class="group"><div><b>${k}</b><br><small>${arr.length} baris • Komisi Rp ${tk.toLocaleString('id-ID')} • Net Rp ${tn.toLocaleString('id-ID')}</small></div><button class="dl" onclick="downloadSatu(this)" data-k="${k.replace(/"/g,'&quot;')}">⬇️ Download</button></div>`;
- });
- document.getElementById('listGrup').innerHTML=html;
- document.getElementById('headPreview').innerHTML='<tr>'+headers.slice(0,8).map(h=>`<th>${h}</th>`).join('')+'</tr>';
- document.getElementById('bodyPreview').innerHTML=rows.slice(0,5).map(r=>'<tr>'+r.slice(0,8).map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+  grouped={}; metaGrup={};
+  rows.forEach(r=>{
+    let dokter=String(r.vals[idx.dokter]||'').trim()||'Tanpa_Dokter';
+    let cabang=String(r.vals[idx.cabang]||'').trim()||'MAKASSAR';
+    let periodVal=r.vals[idx.period]||r.vals[0]; // period_month atau transaction_date
+    let info=bulanInfo(periodVal);
+    // Kalau period_month kosong, coba dari commission_period "Period - November 26"
+    let k=dokter+' ||| '+cabang+' ||| '+info.tahunFull+'-'+info.bulan;
+    if(!grouped[k]) grouped[k]=[];
+    grouped[k].push(r);
+    if(!metaGrup[k]){
+      let kode=kodeCabang(cabang, r.vals[idx.invoice]);
+      metaGrup[k]={dokter:dokter, cabang:cabang, kodeCabang:kode, bulan:info.bulan, tahun2:info.tahun2, tahunFull:info.tahunFull, docReff: String(r.vals[idx.docReff]||''), periodText: String(r.vals[idx.period]||'')};
+    }
+  });
+  document.getElementById('hasil').style.display='block';
+  let totalKomisi=0;
+  Object.values(grouped).forEach(arr=>arr.forEach(r=>{ totalKomisi+=Number(r.vals[idx.komisi])||0; }));
+  document.getElementById('totalInfo').innerText=Object.keys(grouped).length+' file akan dibuat • '+rows.length+' total baris';
+  document.getElementById('totalDuit').innerText='Total Komisi Semua: Rp '+totalKomisi.toLocaleString('id-ID');
+  document.getElementById('contohNama').style.display='block';
+  document.getElementById('listNamaPreview').innerHTML=Object.keys(grouped).sort().slice(0,5).map(k=>'📄 '+namaFileFinal(metaGrup[k])+'.xlsx').join('<br>');
+  let html='';
+  Object.keys(grouped).sort().forEach(k=>{
+    let arr=grouped[k]; let tk=0; arr.forEach(r=>{ tk+=Number(r.vals[idx.komisi])||0; });
+    html+='<div class="group"><div><b>'+metaGrup[k].dokter+'</b><br><small>'+metaGrup[k].cabang+' ('+metaGrup[k].kodeCabang+') • '+metaGrup[k].bulan+' 20'+metaGrup[k].tahun2+' • '+arr.length+' baris • Komisi Rp '+tk.toLocaleString('id-ID')+'<br><code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:11px">'+namaFileFinal(metaGrup[k])+'.xlsx</code></small></div><button class="dl" onclick="downloadSatu(this)" data-k="'+k.replace(/"/g,'&quot;')+'">⬇️ Download</button></div>';
+  });
+  document.getElementById('listGrup').innerHTML=html;
 }
-function bersih(s){ return String(s).replace(/[\\/:*?"<>|]/g,'-').trim(); }
-function namaFileUntuk(k){
- if(document.getElementById('modeNama').value==='lengkap'){
-   // Kalau k = "Hanifa Safira | ARTERI" -> jadi "ARTERI - Hanifa Safira"
-   let parts=k.split(' | ');
-   return parts.reverse().join(' - ');
- }
- return k.split(' | ')[0];
+// === INI YANG BIKIN HASILNYA PERSIS KAYAK CONTOH ===
+async function buatWorkbookUntuk(k){
+  let arr=grouped[k]; let meta=metaGrup[k];
+  let wb=new ExcelJS.Workbook(); let ws=wb.addWorksheet('Sheet1');
+  // Lebar kolom persis kayak contoh
+  let widths=[17.2,13.5,15.9,19,11.8,13.7,27.5,9.7,10.9,36.3,8.4,12.8,18.4,27.9,24.6,10.5,60,18.1,10,32.4,35.5,10.9,17.2,16];
+  widths.forEach((w,i)=>{ ws.getColumn(i+1).width=w; });
+  // Header kuning tebal
+  let hr=ws.getRow(1);
+  headers.forEach((h,i)=>{
+    let c=hr.getCell(i+1); c.value=h;
+    c.font={name:'Calibri', size:11, bold:true};
+    c.fill={type:'pattern', pattern:'solid', fgColor:{argb:'FFFFFF00'}}; // kuning persis contoh
+  });
+  // Data
+  arr.forEach((r, ri)=>{
+    let row=ws.getRow(ri+2);
+    r.vals.forEach((v, ci)=>{
+      let c=row.getCell(ci+1);
+      // ExcelJS: kalau value adalah Date, biarkan Date. Kalau object {formula}, biarkan.
+      c.value=v;
+      // Format: simpan format asli kalau ada, kalau tidak, kasih default
+      if(r.fmts && r.fmts[ci]) c.numFmt=r.fmts[ci];
+    });
+    // Format khusus yang di contoh: A = tanggal panjang, B = yyyy-mm-dd, K/L/M/U = #,##0, N = 0%, X = Rp
+    // (kalau file gabungan sudah punya format, di atas sudah ke-copy. Ini fallback)
+    if(!r.fmts[0]) ws.getCell('A'+(ri+2)).numFmt='dddd, mmmm dd, yyyy';
+    if(!r.fmts[1]) ws.getCell('B'+(ri+2)).numFmt='yyyy-mm-dd';
+    if(!r.fmts[10]) ws.getCell('K'+(ri+2)).numFmt='#,##0';
+    if(!r.fmts[11]) ws.getCell('L'+(ri+2)).numFmt='#,##0';
+    if(!r.fmts[12]) ws.getCell('M'+(ri+2)).numFmt='#,##0';
+    if(!r.fmts[13]) ws.getCell('N'+(ri+2)).numFmt='0%';
+    if(!r.fmts[20]) ws.getCell('U'+(ri+2)).numFmt='#,##0';
+    if(!r.fmts[23]) ws.getCell('X'+(ri+2)).numFmt='_-"Rp"* #,##0_-;-\"Rp\"* #,##0_-;_-\"Rp\"* \"-\"_-;_-@_-';
+  });
+  let lastDataRow=arr.length+1; // baris terakhir data (header=1)
+  let totalRow=lastDataRow+1; // persis contoh: data 2-38, total di 39
+  // Baris TOTAL
+  let tr=ws.getRow(totalRow);
+  tr.getCell(23).value='Total Komisi'; // kolom W
+  tr.getCell(23).font={bold:true};
+  // Kolom X = SUM, persis contoh =SUM(X2:X38)
+  let komisiColLetter='X';
+  tr.getCell(24).value={formula:'SUM('+komisiColLetter+'2:'+komisiColLetter+lastDataRow+')'};
+  tr.getCell(24).numFmt='_-"Rp"* #,##0_-;-\"Rp\"* #,##0_-;_-\"Rp\"* \"-\"_-;_-@_-';
+  tr.getCell(24).font={bold:true};
+  // Baris kosong
+  // Rekap bawah persis contoh (2 baris setelah total)
+  let pivotHeaderRow=totalRow+2; // baris 41 di contoh
+  let pivotDataRow=totalRow+3;   // baris 42 di contoh
+  let ph=ws.getRow(pivotHeaderRow);
+  // T=branch_name, U=IDTM, V=NRP, W=DOC NAME 2, X=SUM of komisi (kolom 20-24)
+  ph.getCell(20).value='branch_name'; ph.getCell(21).value='IDTM'; ph.getCell(22).value='NRP'; ph.getCell(23).value='DOC NAME 2'; ph.getCell(24).value='SUM of komisi';
+  for(let i=20;i<=24;i++){ ph.getCell(i).font={bold:true}; }
+  let pd=ws.getRow(pivotDataRow);
+  pd.getCell(20).value=meta.cabang; // MAKASSAR
+  pd.getCell(21).value=meta.docReff; // 12873
+  pd.getCell(22).value=''; // NRP - diisi manual kalau ada, di contoh PBJ266942
+  pd.getCell(23).value=meta.dokter.toUpperCase(); // MUHAMMAD IHSAN
+  pd.getCell(24).value={formula:'X'+totalRow}; // =X39
+  pd.getCell(24).numFmt='_-"Rp"* #,##0_-;-\"Rp\"* #,##0_-;_-\"Rp\"* \"-\"_-;_-@_-';
+  // Freeze header
+  ws.views=[{state:'frozen', xSplit:0, ySplit:1}];
+  ws.sheetProperties.pageSetUpPr={fitToPage:true};
+  return wb;
 }
-function buatWB(arr){
- let aoa=[headers, ...arr];
- let ws=XLSX.utils.aoa_to_sheet(aoa);
- let wb=XLSX.utils.book_new();
- XLSX.utils.book_append_sheet(wb, ws, 'Data');
- return wb;
-}
-function downloadSatu(btn){
- let k=btn.getAttribute('data-k');
- let wb=buatWB(grouped[k]);
- XLSX.writeFile(wb, bersih(namaFileUntuk(k))+'.xlsx');
+async function downloadSatu(btn){
+  let k=btn.getAttribute('data-k');
+  let wb=await buatWorkbookUntuk(k);
+  let buf=await wb.xlsx.writeBuffer();
+  let blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=namaFileFinal(metaGrup[k])+'.xlsx'; a.click();
 }
 async function downloadSemua(){
- let zip=new JSZip();
- Object.keys(grouped).sort().forEach(k=>{
-   let wb=buatWB(grouped[k]);
-   let out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
-   zip.file(bersih(namaFileUntuk(k))+'.xlsx', out);
- });
- let blob=await zip.generateAsync({type:'blob'});
- let a=document.createElement('a'); a.href=URL.createObjectURL(blob);
- a.download=fileAsal+'-TERPISAH.zip'; a.click();
-}
-function downloadRekap(){
- let wb=XLSX.utils.book_new();
- let rekap=Object.keys(grouped).sort().map(k=>{
-   let arr=grouped[k]; let tk=0, tn=0;
-   arr.forEach(r=>{
-     if(idx.komisi>=0) tk+=Number(String(r[idx.komisi]).replace(/[^0-9.-]/g,''))||0;
-     if(idx.net>=0) tn+=Number(String(r[idx.net]).replace(/[^0-9.-]/g,''))||0;
-   });
-   return {Grup:k, Jumlah_Baris:arr.length, Total_Komisi:tk, Total_Net_Sell:tn};
- });
- XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rekap), 'REKAP');
- Object.keys(grouped).sort().forEach(k=>{
-   let ws=XLSX.utils.aoa_to_sheet([headers,...grouped[k]]);
-   XLSX.utils.book_append_sheet(wb, ws, bersih(k).substring(0,31));
- });
- XLSX.writeFile(wb, fileAsal+'-REKAP.xlsx');
+  setProg(10,'Lagi bikin ZIP...');
+  let zip=new JSZip();
+  for(let k of Object.keys(grouped).sort()){
+    let wb=await buatWorkbookUntuk(k);
+    let buf=await wb.xlsx.writeBuffer();
+    zip.file(namaFileFinal(metaGrup[k])+'.xlsx', buf);
+  }
+  let blob=await zip.generateAsync({type:'blob'});
+  setProg(100,'Selesai!');
+  let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='Komisi_Dokter_Semua.zip'; a.click();
 }
 </script>
 </body>
