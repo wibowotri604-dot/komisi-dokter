@@ -1,1 +1,209 @@
-# komisi-dokter
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pisah Excel V2 - Natasha</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+ *{box-sizing:border-box;font-family:Arial,sans-serif}
+ body{margin:0;background:#f4f6f8;padding:12px}
+ .card{background:#fff;border-radius:16px;padding:18px;max-width:980px;margin:auto;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+ h1{margin:0;font-size:22px} p.sub{color:#666;font-size:13px;margin:6px 0 14px}
+ label{font-size:12px;font-weight:bold}
+ input,select{width:100%;padding:11px;margin-top:5px;border:1px solid #ddd;border-radius:9px;font-size:14px}
+ .drop{border:2px dashed #2563eb;border-radius:12px;padding:22px;text-align:center;background:#eff6ff;cursor:pointer}
+ .btn{width:100%;padding:13px;border:0;border-radius:10px;color:#fff;font-weight:bold;font-size:15px;margin-top:10px;cursor:pointer}
+ .green{background:#059669}.blue{background:#2563eb}.dark{background:#111}
+ .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+ @media(max-width:600px){.row{grid-template-columns:1fr}}
+ .group{border:1px solid #eee;border-radius:12px;padding:12px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+ .dl{background:#059669;color:#fff;border:0;padding:9px 14px;border-radius:8px;cursor:pointer;font-weight:bold;white-space:nowrap}
+ .badge{background:#111;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px}
+ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}
+ th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;white-space:nowrap}
+ th{background:#f8f8f8}
+ .info{background:#fef3c7;border:1px solid #fde68a;padding:12px;border-radius:10px;font-size:13px;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="card">
+ <h1>✂️ Pisah Excel Otomatis V2</h1>
+ <p class="sub">Natasha Skin Clinic • File Kakak: transaction_date, branch_name, doctor, komisi</p>
+
+ <label>1. Upload File Excel</label>
+ <div class="drop" onclick="document.getElementById('file').click()">
+   <div style="font-size:30px">📂</div>
+   <div id="fileName"><b>Klik untuk pilih file</b><br><small>.xlsx / .xls / .csv</small></div>
+ </div>
+ <input type="file" id="file" accept=".xlsx,.xls,.csv" hidden onchange="bacaFile(event)">
+
+ <div class="row">
+  <div>
+   <label>2. Pisahkan Berdasarkan:</label>
+   <select id="modePisah" onchange="buatGrup()">
+     <option value="doctor">👩‍⚕️ Per Dokter (doctor)</option>
+     <option value="branch_name">🏥 Per Cabang (branch_name)</option>
+     <option value="doctor+branch">👩‍⚕️ + 🏥 Per Dokter + Cabang</option>
+     <option value="doctor+bulan">👩‍⚕️ + 📅 Per Dokter + Bulan</option>
+     <option value="branch+bulan">🏥 + 📅 Per Cabang + Bulan</option>
+     <option value="bulan">📅 Per Bulan Saja</option>
+   </select>
+  </div>
+  <div>
+   <label>3. Format Nama File Hasil:</label>
+   <select id="modeNama">
+     <option value="simple">Hanifa Safira.xlsx</option>
+     <option value="lengkap">ARTERI - Hanifa Safira - Nov 2026.xlsx</option>
+   </select>
+  </div>
+ </div>
+
+ <div id="infoAwal" class="info">💡 <b>Cara pakai:</b> Download dari Google Sheets (File > Download > Excel) → Upload di sini → Pilih <b>Per Dokter</b> → Klik <b>Download Semua (ZIP)</b>. Beres, nggak perlu pisah manual lagi!</div>
+
+ <div id="hasil" style="display:none">
+   <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
+     <div><b id="totalInfo"></b><br><small id="totalDuit" style="color:#666"></small></div>
+     <span class="badge" id="namaKolom"></span>
+   </div>
+   <button class="btn green" onclick="downloadSemua()">📦 Download Semua (ZIP)</button>
+   <button class="btn blue" onclick="downloadRekap()">📊 Download Rekap (1 File, Banyak Sheet)</button>
+   <div id="listGrup"></div>
+   <div style="margin-top:16px"><b>Preview (8 kolom pertama)</b><div style="overflow-x:auto"><table><thead id="headPreview"></thead><tbody id="bodyPreview"></tbody></table></div></div>
+ </div>
+ <p style="text-align:center;color:#999;font-size:11px;margin-top:14px">Diproses di HP Kakak saja, tidak dikirim ke server • Aman</p>
+</div>
+
+<script>
+let headers=[], rows=[], grouped={}, fileAsal='data';
+let idx = {doctor:-1, branch_name:-1, transaction_date:-1, komisi:-1, net:-1};
+
+function bacaFile(e){
+ let f=e.target.files[0]; if(!f) return;
+ fileAsal=f.name.replace(/\.[^/.]+$/,'');
+ document.getElementById('fileName').innerHTML='<b>✅ '+f.name+'</b><br><small>Membaca...</small>';
+ let r=new FileReader();
+ r.onload=function(ev){
+  let wb=XLSX.read(ev.target.result,{type:'array'});
+  let ws=wb.Sheets[wb.SheetNames[0]];
+  // Pakai array (header:1) biar kolom kembar potong_bahan tidak hilang
+  let aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+  // Cari baris header yang ada kata 'doctor'
+  let hRow=aoa.findIndex(row=>row.some(c=>String(c).toLowerCase().includes('doctor')));
+  if(hRow===-1) hRow=0;
+  headers=aoa[hRow].map((h,i)=> h ? String(h).trim() : 'kolom_'+(i+1));
+  // Kalau ada nama kembar, kasih angka biar beda: potong_bahan, potong_bahan_2
+  let seen={};
+  headers=headers.map(h=>{ if(seen[h]){ seen[h]++; return h+'_'+seen[h]; } seen[h]=1; return h; });
+  rows=aoa.slice(hRow+1).filter(row=>row.some(c=>String(c).trim()!==''));
+  // Cari index kolom penting
+  idx.doctor=headers.findIndex(h=>h.toLowerCase().includes('doctor'));
+  idx.branch_name=headers.findIndex(h=>h.toLowerCase().includes('branch'));
+  idx.transaction_date=headers.findIndex(h=>h.toLowerCase().includes('transaction_date')||h.toLowerCase().includes('date'));
+  idx.komisi=headers.findIndex(h=>h.toLowerCase()==='komisi'||h.toLowerCase().includes('komisi'));
+  idx.net=headers.findIndex(h=>h.toLowerCase().includes('net_sell'));
+  document.getElementById('fileName').innerHTML='<b>✅ '+f.name+'</b><br><small>'+rows.length+' baris • '+headers.length+' kolom • Dokter: '+(idx.doctor+1)+', Cabang: '+(idx.branch_name+1)+', Komisi: '+(idx.komisi+1)+'</small>';
+  buatGrup();
+ };
+ r.readAsArrayBuffer(f);
+}
+
+function bulanDari(tgl){
+ let s=String(tgl||'').trim(); if(!s) return 'Tanpa Tanggal';
+ let d=new Date(s); if(!isNaN(d)) return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+ if(s.length>=7) return s.slice(0,7); return s;
+}
+function kunciGrup(row){
+ let mode=document.getElementById('modePisah').value;
+ let dok= idx.doctor>=0 ? String(row[idx.doctor]||'').trim()||'(Tanpa Dokter)' : '';
+ let cab= idx.branch_name>=0 ? String(row[idx.branch_name]||'').trim()||'(Tanpa Cabang)' : '';
+ let bln= idx.transaction_date>=0 ? bulanDari(row[idx.transaction_date]) : '';
+ if(mode==='doctor') return dok;
+ if(mode==='branch_name') return cab;
+ if(mode==='doctor+branch') return dok+' | '+cab;
+ if(mode==='doctor+bulan') return dok+' | '+bln;
+ if(mode==='branch+bulan') return cab+' | '+bln;
+ if(mode==='bulan') return bln;
+ return dok;
+}
+function buatGrup(){
+ if(!rows.length) return;
+ grouped={};
+ rows.forEach(r=>{ let k=kunciGrup(r); if(!grouped[k]) grouped[k]=[]; grouped[k].push(r); });
+ document.getElementById('hasil').style.display='block';
+ let mode=document.getElementById('modePisah').value;
+ document.getElementById('namaKolom').innerText='Mode: '+mode;
+ let totalKomisi=0, totalNet=0;
+ Object.values(grouped).forEach(arr=>arr.forEach(r=>{
+   if(idx.komisi>=0) totalKomisi+=Number(String(r[idx.komisi]).replace(/[^0-9.-]/g,''))||0;
+   if(idx.net>=0) totalNet+=Number(String(r[idx.net]).replace(/[^0-9.-]/g,''))||0;
+ }));
+ document.getElementById('totalInfo').innerText=Object.keys(grouped).length+' grup • '+rows.length+' total baris';
+ document.getElementById('totalDuit').innerText='Total Komisi Semua: Rp '+totalKomisi.toLocaleString('id-ID')+' • Total Net Sell: Rp '+totalNet.toLocaleString('id-ID');
+
+ let html='';
+ Object.keys(grouped).sort().forEach(k=>{
+   let arr=grouped[k]; let tk=0, tn=0;
+   arr.forEach(r=>{
+     if(idx.komisi>=0) tk+=Number(String(r[idx.komisi]).replace(/[^0-9.-]/g,''))||0;
+     if(idx.net>=0) tn+=Number(String(r[idx.net]).replace(/[^0-9.-]/g,''))||0;
+   });
+   html+=`<div class="group"><div><b>${k}</b><br><small>${arr.length} baris • Komisi Rp ${tk.toLocaleString('id-ID')} • Net Rp ${tn.toLocaleString('id-ID')}</small></div><button class="dl" onclick="downloadSatu(this)" data-k="${k.replace(/"/g,'&quot;')}">⬇️ Download</button></div>`;
+ });
+ document.getElementById('listGrup').innerHTML=html;
+ document.getElementById('headPreview').innerHTML='<tr>'+headers.slice(0,8).map(h=>`<th>${h}</th>`).join('')+'</tr>';
+ document.getElementById('bodyPreview').innerHTML=rows.slice(0,5).map(r=>'<tr>'+r.slice(0,8).map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+}
+function bersih(s){ return String(s).replace(/[\\/:*?"<>|]/g,'-').trim(); }
+function namaFileUntuk(k){
+ if(document.getElementById('modeNama').value==='lengkap'){
+   // Kalau k = "Hanifa Safira | ARTERI" -> jadi "ARTERI - Hanifa Safira"
+   let parts=k.split(' | ');
+   return parts.reverse().join(' - ');
+ }
+ return k.split(' | ')[0];
+}
+function buatWB(arr){
+ let aoa=[headers, ...arr];
+ let ws=XLSX.utils.aoa_to_sheet(aoa);
+ let wb=XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb, ws, 'Data');
+ return wb;
+}
+function downloadSatu(btn){
+ let k=btn.getAttribute('data-k');
+ let wb=buatWB(grouped[k]);
+ XLSX.writeFile(wb, bersih(namaFileUntuk(k))+'.xlsx');
+}
+async function downloadSemua(){
+ let zip=new JSZip();
+ Object.keys(grouped).sort().forEach(k=>{
+   let wb=buatWB(grouped[k]);
+   let out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+   zip.file(bersih(namaFileUntuk(k))+'.xlsx', out);
+ });
+ let blob=await zip.generateAsync({type:'blob'});
+ let a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+ a.download=fileAsal+'-TERPISAH.zip'; a.click();
+}
+function downloadRekap(){
+ let wb=XLSX.utils.book_new();
+ let rekap=Object.keys(grouped).sort().map(k=>{
+   let arr=grouped[k]; let tk=0, tn=0;
+   arr.forEach(r=>{
+     if(idx.komisi>=0) tk+=Number(String(r[idx.komisi]).replace(/[^0-9.-]/g,''))||0;
+     if(idx.net>=0) tn+=Number(String(r[idx.net]).replace(/[^0-9.-]/g,''))||0;
+   });
+   return {Grup:k, Jumlah_Baris:arr.length, Total_Komisi:tk, Total_Net_Sell:tn};
+ });
+ XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rekap), 'REKAP');
+ Object.keys(grouped).sort().forEach(k=>{
+   let ws=XLSX.utils.aoa_to_sheet([headers,...grouped[k]]);
+   XLSX.utils.book_append_sheet(wb, ws, bersih(k).substring(0,31));
+ });
+ XLSX.writeFile(wb, fileAsal+'-REKAP.xlsx');
+}
+</script>
+</body>
+</html># komisi-dokter
