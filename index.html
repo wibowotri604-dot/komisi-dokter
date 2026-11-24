@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Komisi Dokter - Natasha Pontianak</title>
+<style>
+  *{box-sizing:border-box;font-family:Arial,sans-serif}
+  body{margin:0;background:#f4f6f8;padding:12px}
+  .card{background:#fff;border-radius:14px;padding:16px;max-width:900px;margin:auto;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+  h1{margin:0 0 4px;font-size:22px}
+  p.sub{margin:0 0 14px;color:#666;font-size:13px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+  label{font-size:12px;font-weight:bold;color:#333}
+  input,select{width:100%;padding:10px;margin-top:4px;border:1px solid #ddd;border-radius:8px;font-size:14px}
+  .btn{width:100%;padding:12px;border:0;border-radius:10px;background:#111;color:#fff;font-weight:bold;font-size:15px;margin-top:12px;cursor:pointer}
+  .btnExcel{background:#059669}
+  .btn2{background:#e11d48}
+  .summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:16px}
+  @media(max-width:600px){.summary{grid-template-columns:1fr}}
+  .box{background:#111;color:#fff;border-radius:12px;padding:14px;text-align:center}
+  .box small{opacity:.7}
+  .box b{font-size:20px;display:block;margin-top:4px}
+  .box.green{background:#059669}
+  .box.blue{background:#2563eb}
+  table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
+  th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+  th{background:#f8f8f8}
+  .del{background:#fee2e2;color:#dc2626;border:0;padding:6px 10px;border-radius:6px;cursor:pointer}
+  .search{margin-top:14px}
+  .footer{text-align:center;color:#999;font-size:11px;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>💰 Komisi Dokter</h1>
+  <p class="sub">Natasha Skin Clinic - Pontianak | Input komisi otomatis</p>
+
+  <div class="grid">
+    <div><label>Tanggal</label><input type="date" id="tanggal"></div>
+    <div><label>Nama Dokter (Ketik Bebas)</label>
+      <input type="text" id="dokter" list="listDokter" placeholder="Ketik nama dokter...">
+      <datalist id="listDokter"></datalist>
+    </div>
+    <div><label>Nama Pasien / Tindakan</label><input type="text" id="tindakan" placeholder="cth: Laser / Filler / Facial"></div>
+    <div><label>Omset (Rp)</label><input type="number" id="omset" placeholder="0" oninput="hitung()"></div>
+    <div><label>% Komisi</label><input type="number" id="persen" value="10" oninput="hitung()"></div>
+    <div><label>Komisi Didapat (Rp)</label><input type="text" id="hasil" readonly style="background:#f0fdf4;font-weight:bold"></div>
+  </div>
+
+  <button class="btn" onclick="tambah()">+ Tambah Komisi</button>
+
+  <div class="summary">
+    <div class="box"><small>Total Transaksi</small><b id="totalTrx">0</b></div>
+    <div class="box blue"><small>Total Omset</small><b id="totalOmset">Rp 0</b></div>
+    <div class="box green"><small>Total Komisi</small><b id="totalKomisi">Rp 0</b></div>
+  </div>
+
+  <input class="search" type="text" id="cari" placeholder="🔍 Cari dokter / tindakan..." oninput="tampil()">
+
+  <div style="overflow-x:auto">
+  <table id="tabelData">
+    <thead><tr><th>Tanggal</th><th>Dokter</th><th>Tindakan</th><th>Omset</th><th>%</th><th>Komisi</th><th></th></tr></thead>
+    <tbody id="list"></tbody>
+  </table>
+  </div>
+
+  <button class="btn btnExcel" onclick="exportExcel()">📥 Unduh Excel (.xls)</button>
+  <button class="btn btn2" onclick="hapusSemua()">Hapus Semua Data</button>
+  <div class="footer">Dibuat untuk Cabang Pontianak • Data tersimpan otomatis di HP ini</div>
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem('komisiDokter') || '[]');
+document.getElementById('tanggal').valueAsDate = new Date();
+function rupiah(n){ return 'Rp ' + Number(n||0).toLocaleString('id-ID'); }
+function hitung(){
+  let o = Number(document.getElementById('omset').value||0);
+  let p = Number(document.getElementById('persen').value||0);
+  document.getElementById('hasil').value = rupiah(o*p/100);
+}
+function tambah(){
+  let t = document.getElementById('tanggal').value;
+  let d = document.getElementById('dokter').value.trim();
+  let tk = document.getElementById('tindakan').value.trim();
+  let o = Number(document.getElementById('omset').value||0);
+  let p = Number(document.getElementById('persen').value||0);
+  if(!d){ alert('Isi nama dokter dulu, Kak!'); return; }
+  if(!tk || !o){ alert('Isi tindakan & omset dulu, Kak!'); return; }
+  data.unshift({t,d,tk,o,p,k:o*p/100});
+  localStorage.setItem('komisiDokter', JSON.stringify(data));
+  document.getElementById('dokter').value='';
+  document.getElementById('tindakan').value='';
+  document.getElementById('omset').value='';
+  hitung(); tampil();
+}
+function tampil(){
+  let q = document.getElementById('cari').value.toLowerCase();
+  let filtered = data.filter(x => (x.d+x.tk).toLowerCase().includes(q));
+  let html = '';
+  let totO=0, totK=0;
+  data.forEach(x=>{totO+=x.o; totK+=x.k;});
+  // Update saran nama dokter
+  let unik = [...new Set(data.map(x=>x.d))];
+  document.getElementById('listDokter').innerHTML = unik.map(n=>`<option value="${n}">`).join('');
+  filtered.forEach((x)=>{
+    let idx = data.indexOf(x);
+    html += `<tr><td>${x.t}</td><td><b>${x.d}</b></td><td>${x.tk}</td><td>${rupiah(x.o)}</td><td>${x.p}%</td><td><b>${rupiah(x.k)}</b></td><td><button class="del" onclick="hapus(${idx})">Hapus</button></td></tr>`;
+  });
+  document.getElementById('list').innerHTML = html || '<tr><td colspan="7" style="text-align:center;color:#999">Belum ada data</td></tr>';
+  document.getElementById('totalTrx').innerText = data.length;
+  document.getElementById('totalOmset').innerText = rupiah(totO);
+  document.getElementById('totalKomisi').innerText = rupiah(totK);
+}
+function hapus(i){ if(confirm('Hapus data ini?')){ data.splice(i,1); localStorage.setItem('komisiDokter', JSON.stringify(data)); tampil(); } }
+function hapusSemua(){ if(confirm('Hapus SEMUA data?')){ data=[]; localStorage.removeItem('komisiDokter'); tampil(); } }
+
+// EXPORT KE EXCEL
+function exportExcel(){
+  if(data.length===0){ alert('Belum ada data untuk diunduh!'); return; }
+  let totO=0, totK=0;
+  data.forEach(x=>{totO+=x.o; totK+=x.k;});
+  let html = `<table border="1"><tr><th colspan="6" style="font-size:16px">LAPORAN KOMISI DOKTER - NATASHA PONTIANAK</th></tr>`;
+  html += `<tr><th>Tanggal</th><th>Nama Dokter</th><th>Tindakan / Pasien</th><th>Omset</th><th>% Komisi</th><th>Komisi</th></tr>`;
+  [...data].reverse().forEach(x=>{
+    html += `<tr><td>${x.t}</td><td>${x.d}</td><td>${x.tk}</td><td>${x.o}</td><td>${x.p}%</td><td>${x.k}</td></tr>`;
+  });
+  html += `<tr><td colspan="3"><b>TOTAL</b></td><td><b>${totO}</b></td><td></td><td><b>${totK}</b></td></tr></table>`;
+  let blob = new Blob(['\ufeff' + html], {type:'application/vnd.ms-excel'});
+  let a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  let tgl = new Date().toISOString().slice(0,10);
+  a.download = `Komisi-Dokter-${tgl}.xls`;
+  a.click();
+}
+hitung(); tampil();
+</script>
+</body>
+</html>
