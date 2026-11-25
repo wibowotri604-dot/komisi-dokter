@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pisah Excel V14 - Total nempel di bawah AE komisi</title>
+<title>Pisah Excel V15 - Pilih Kolom Download</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
@@ -13,7 +13,8 @@
  label{font-size:12px;font-weight:bold;display:block;margin-top:12px} select,input{width:100%;padding:12px;margin-top:5px;border:1px solid #ddd;border-radius:9px;font-size:14px;background:#fff}
  .drop{border:2px dashed #2563eb;border-radius:12px;padding:22px;text-align:center;background:#eff6ff;cursor:pointer}
  .btn{width:100%;padding:14px;border:0;border-radius:10px;color:#fff;font-weight:bold;font-size:15px;margin-top:10px;cursor:pointer}
- .green{background:#059669}.orange{background:#ea580c}.gray{background:#6b7280}.purple{background:#7c3aed}
+ .btnSmall{padding:8px 12px;border:0;border-radius:8px;color:#fff;font-weight:bold;font-size:12px;cursor:pointer;margin:2px}
+ .green{background:#059669}.orange{background:#ea580c}.gray{background:#6b7280}.purple{background:#7c3aed}.blue{background:#2563eb}
  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px} @media(max-width:600px){.row{grid-template-columns:1fr}}
  .group{border:1px solid #eee;border-radius:12px;padding:12px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:10px}
  .dl{background:#059669;color:#fff;border:0;padding:9px 14px;border-radius:8px;cursor:pointer;font-weight:bold;white-space:nowrap}
@@ -24,12 +25,17 @@
  .chip{display:inline-block;background:#111;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;margin:2px}
  .gsBox{background:#f5f3ff;border:2px solid #ddd6fe;padding:14px;border-radius:12px;margin-top:12px}
  .kolomBox{background:#eff6ff;border:1px solid #bfdbfe;padding:10px;border-radius:10px;margin-top:10px;font-size:13px}
+ .pilihKolomBox{background:#fffbeb;border:2px solid #fde68a;padding:14px;border-radius:12px;margin-top:12px}
+ .cekKolom{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #eee;border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer}
+ .cekKolom input{width:auto;margin:0;accent-color:#059669}
+ .cekKolom.off{opacity:.45}
+ .gridKolom{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px} @media(max-width:600px){.gridKolom{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="card">
- <h1>✂️ Pisah Excel V14 - Total nempel di bawah komisi</h1>
- <p class="sub">Sheet: <b>detail</b> • Kolom: <b>transaction_date s/d komisi (sampai AE saja, tidak ada kolom sesudahnya)</b> • Total langsung di bawah baris terakhir</p>
+ <h1>✂️ Pisah Excel V15 - Pilih Kolom Download</h1>
+ <p class="sub">Sheet: <b>detail</b> • Kolom hasil download <b>bisa dipilih sendiri</b> • Total tetap nempel di bawah</p>
  <div class="gsBox">
   <b>📊 1. Ambil dari Google Sheets (opsional)</b>
   <input id="gsLink" value="https://docs.google.com/spreadsheets/d/1SaGMl72AIOZG0PAS7K2WIQH_4-y8bz5wAvrWgCapWWg/edit?gid=751004332#gid=751004332">
@@ -49,26 +55,40 @@
    <label>👩‍⚕️ Dokter (doctor):</label><select id="filterDokter" onchange="terapkanFilter()"><option value="SEMUA">-- Semua Dokter --</option></select>
    <label>🔍 Cari Dokter:</label><input id="cariDokter" placeholder="Ketik nama dokter..." oninput="filterDokterBySearch()">
    <div style="margin-top:10px"><span id="chipInfo"></span></div>
-   <div class="kolomBox"><b>📋 Kolom hasil download (DIKUNCI sampai komisi):</b><br><span id="kolomInfo">...</span><br><small style="color:#666">Sampai komisi saja. Tidak ada kolom setelah komisi.</small></div>
    <button class="btn gray" onclick="resetFilter()">🔄 Reset Filter</button>
   </div>
+
+  <div class="pilihKolomBox">
+   <b style="font-size:16px">📋 3. Pilih Kolom Hasil Download</b><br>
+   <small style="color:#666">Centang kolom yang mau ikut ke file Excel. Yang tidak dicentang tidak ikut ke-download.</small>
+   <div style="margin-top:10px">
+    <button class="btnSmall green" onclick="pilihSemuaKolom()">✅ Pilih Semua</button>
+    <button class="btnSmall gray" onclick="hapusSemuaKolom()">❌ Hapus Semua</button>
+    <button class="btnSmall blue" onclick="pilihSampaiKomisi()">➡️ Sampai Komisi (AE) — transaction_date s/d komisi</button>
+    <button class="btnSmall orange" onclick="pilihKolomPenting()">⭐ Hanya Kolom Penting</button>
+   </div>
+   <div id="gridKolom" class="gridKolom"></div>
+   <div id="kolomTerpilihInfo" style="margin-top:10px;font-size:13px;font-weight:bold;color:#059669"></div>
+  </div>
+
   <div id="hasilFilter" class="hasilFilter" style="display:none">
    <b id="judulFilter" style="font-size:16px"></b><br>
    <small id="detailFilter" style="color:#666"></small><br>
    <code id="namaFileFilter" style="background:#111;color:#0f0;padding:4px 8px;border-radius:6px;font-size:12px;display:inline-block;margin-top:6px"></code><br>
    <small id="isiFileInfo" style="color:#666"></small>
-   <button class="btn green" onclick="downloadExcelRapi()">⬇️ Download Excel Ini (RAPI - Total KUNING nempel di bawah)</button>
+   <button class="btn green" onclick="downloadExcelRapi()">⬇️ Download Excel Ini (RAPI - Kolom Terpilih + Total KUNING)</button>
    <button class="btn orange" onclick="downloadExcelCepat()">⚡ Download Excel Ini (CEPAT)</button>
-   <div style="margin-top:12px"><b>Preview (5 baris pertama):</b><div style="overflow-x:auto"><table><thead id="headPreview"></thead><tbody id="bodyPreview"></tbody></table></div></div>
+   <div style="margin-top:12px"><b>Preview (5 baris pertama, kolom terpilih):</b><div style="overflow-x:auto"><table><thead id="headPreview"></thead><tbody id="bodyPreview"></tbody></table></div></div>
   </div>
   <div id="listPerDokter" style="margin-top:14px"></div>
  </div>
- <p style="text-align:center;color:#999;font-size:11px;margin-top:14px">V14 • Sheet: detail • Sampai komisi saja • Total nempel di bawah</p>
+ <p style="text-align:center;color:#999;font-size:11px;margin-top:14px">V15 • Pilih Kolom • Sheet: detail • Total nempel di bawah</p>
 </div>
 <script>
 let headers=[], rows=[];
 let idx={dokter:-1,cabang:-1,period:-1,komisi:-1,docReff:-1,invoice:-1,transaction:-1};
 let allCabang=[], allDokter=[], allBulan=[];
+let kolomTerpilih=[]; // index di headers (original) yang dipilih
 const KOLOM_AWAL='transaction_date';
 const KOLOM_AKHIR='komisi';
 function setProg(p,t){document.getElementById('prog').style.width=p+'%';document.getElementById('statusTxt').innerText=t||'';}
@@ -85,18 +105,21 @@ function rangeKolom(){
   if(end===-1 || end<start) end=headers.length-1;
   return {start, end};
 }
+// === KOLOM YANG DIPILIH USER ===
+function headersTerpilih(){
+  if(!kolomTerpilih.length) return headersUtama();
+  return kolomTerpilih.map(i=> headers[i]);
+}
+function rowsTerpilih(arrRows){
+  if(!kolomTerpilih.length) return rowsUtama(arrRows);
+  return arrRows.map(r=> kolomTerpilih.map(i=> r[i]));
+}
 function headersUtama(){ let {start,end}=rangeKolom(); return headers.slice(start, end+1); }
 function rowsUtama(arrRows){ let {start,end}=rangeKolom(); return arrRows.map(r=> r.slice(start, end+1)); }
-function updateKolomInfo(){
-  if(!headers.length) return;
-  let {start,end}=rangeKolom();
-  let list=headers.slice(start,end+1);
-  document.getElementById('kolomInfo').innerHTML='<b>'+headers[start]+' ➜ '+headers[end]+'</b> ('+list.length+' kolom): '+list.join(' | ');
-}
-function indexKomisiDiUtama(){
-  let h=headersUtama();
+function indexKomisiDiTerpilih(){
+  let h=headersTerpilih();
   for(let i=h.length-1;i>=0;i--){ if(h[i].toLowerCase()==='komisi') return i; }
-  return h.length-1;
+  return -1; // kalau komisi tidak dipilih, total tetap ditulis tapi di kolom terakhir
 }
 function colLetter(n){ let s=''; n++; while(n>0){ let m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-1)/26); } return s; }
 function rekapPerDokter(arrRows){
@@ -109,6 +132,58 @@ function rekapPerDokter(arrRows){
     map[d].count++;
   });
   return Object.values(map).sort((a,b)=> a.dokter.localeCompare(b.dokter));
+}
+// === UI PILIH KOLOM ===
+function renderPilihKolom(){
+  let {start,end}=rangeKolom();
+  // Daftar kolom yang bisa dipilih = dari transaction_date sampai komisi (sampai AE) + kolom lain di belakangnya kalau ada, tapi default yang ditampilkan sampai komisi
+  // Supaya sesuai permintaan Kakak: default list = transaction_date s/d komisi
+  let listIdx=[];
+  for(let i=start;i<=end;i++) listIdx.push(i);
+  // Kalau kolomTerpilih masih kosong, isi default sampai komisi
+  if(!kolomTerpilih.length) kolomTerpilih=[...listIdx];
+  let html='';
+  listIdx.forEach((idxCol,i)=>{
+    let checked = kolomTerpilih.includes(idxCol) ? 'checked' : '';
+    let cls = kolomTerpilih.includes(idxCol) ? '' : 'off';
+    // Nomor kolom Excel asli: A=1, AE=31, dll — biar Kakak gampang nyocokin dengan screenshot
+    let huruf = colLetter(idxCol);
+    html+='<label class="cekKolom '+cls+'" id="cekWrap_'+idxCol+'"><input type="checkbox" '+checked+' onchange="toggleKolom('+idxCol+', this.checked)"> <span><b>'+huruf+'</b> • '+headers[idxCol]+'</span></label>';
+  });
+  document.getElementById('gridKolom').innerHTML=html;
+  updateKolomTerpilihInfo();
+}
+function toggleKolom(idxCol, checked){
+  if(checked){ if(!kolomTerpilih.includes(idxCol)) kolomTerpilih.push(idxCol); }
+  else { kolomTerpilih=kolomTerpilih.filter(x=> x!==idxCol); }
+  kolomTerpilih.sort((a,b)=> a-b);
+  let w=document.getElementById('cekWrap_'+idxCol); if(w) w.classList.toggle('off', !checked);
+  updateKolomTerpilihInfo(); terapkanFilter();
+}
+function updateKolomTerpilihInfo(){
+  let h=headersTerpilih();
+  document.getElementById('kolomTerpilihInfo').innerText='✅ '+h.length+' kolom terpilih: '+h.join(' | ');
+}
+function pilihSemuaKolom(){
+  let {start,end}=rangeKolom(); kolomTerpilih=[]; for(let i=start;i<=end;i++) kolomTerpilih.push(i);
+  renderPilihKolom(); terapkanFilter();
+}
+function hapusSemuaKolom(){
+  kolomTerpilih=[];
+  renderPilihKolom(); terapkanFilter();
+}
+function pilihSampaiKomisi(){
+  // Ini yang Kakak minta sebelumnya: transaction_date s/d komisi (sampai AE)
+  pilihSemuaKolom();
+}
+function pilihKolomPenting(){
+  // Hanya yang paling sering dipakai
+  let target=['transaction_date','branch_name','invoice_number','doctor','doc_reff','item_name','qty_sold','net_sell_price','komisi'];
+  let {start,end}=rangeKolom();
+  kolomTerpilih=[];
+  for(let i=start;i<=end;i++){ if(target.includes(headers[i].toLowerCase())) kolomTerpilih.push(i); }
+  if(!kolomTerpilih.length) kolomTerpilih=[...Array(end-start+1)].map((_,k)=> start+k);
+  renderPilihKolom(); terapkanFilter();
 }
 async function ambilDariGSheet(){
   let link=document.getElementById('gsLink').value.trim();
@@ -170,6 +245,7 @@ function prosesAOA(aoa, namaFile){
   idx.dokter=findIdx('doctor'); idx.cabang=findIdx('branch_name'); idx.transaction=findIdx('transaction_date'); idx.period=findIdx('transaction_date'); idx.komisi=headers.length-1; headers.forEach((h,i)=>{ if(h.toLowerCase()==='komisi') idx.komisi=i; }); idx.docReff=findIdx('doc_reff'); idx.invoice=findIdx('invoice_number');
   rows=[];
   for(let i=hRow+1;i<aoa.length;i++){ let vals=aoa[i]; if(!vals || vals.every(v=>String(v||'').trim()==='')) continue; let teks=vals.join(' ').toLowerCase(); if(teks.includes('total komisi')||teks.includes('sum of komisi')) continue; rows.push(vals); }
+  kolomTerpilih=[]; // reset, nanti diisi default sampai komisi di renderPilihKolom
   setProg(100,'Selesai! '+rows.length+' baris dari '+namaFile);
   siapkanFilter();
 }
@@ -181,7 +257,7 @@ function siapkanFilter(){
   document.getElementById('filterBulan').innerHTML='<option value="SEMUA">-- Semua Bulan --</option>'+allBulan.map(([k,v])=>'<option value="'+k+'">'+v+'</option>').join('');
   isiDokterDropdown(allDokter);
   document.getElementById('filterSection').style.display='block';
-  updateKolomInfo(); terapkanFilter();
+  renderPilihKolom(); terapkanFilter();
 }
 function isiDokterDropdown(list){ let sel=document.getElementById('filterDokter'); let cur=sel.value; sel.innerHTML='<option value="SEMUA">-- Semua Dokter ('+list.length+') --</option>'+list.map(d=>'<option value="'+d.replace(/"/g,'&quot;')+'">'+d+'</option>').join(''); if(list.includes(cur)) sel.value=cur; }
 function onCabangChange(){ let cab=document.getElementById('filterCabang').value; let listDokter = cab==='SEMUA' ? allDokter : [...new Set(rows.filter(r=> String(r[idx.cabang]||'').trim()===cab).map(r=> String(r[idx.dokter]||'').trim()))].sort(); isiDokterDropdown(listDokter); document.getElementById('filterDokter').value='SEMUA'; }
@@ -209,10 +285,17 @@ function namaFileExcel(){
   return 'Komisi_Dokter_'+kode+'_'+blnLabel+'_'+dokLabel;
 }
 function terapkanFilter(){
-  updateKolomInfo();
+  updateKolomTerpilihInfo();
   let filtered=rowsTerfilter();
   let cab=document.getElementById('filterCabang').value; let dok=document.getElementById('filterDokter').value; let bln=document.getElementById('filterBulan').value;
   document.getElementById('chipInfo').innerHTML = (cab!=='SEMUA'?'<span class="chip">🏥 '+cab+'</span>':'')+(dok!=='SEMUA'?'<span class="chip">👩‍⚕️ '+dok+'</span>':'')+(bln!=='SEMUA'?'<span class="chip">📅 '+bln+'</span>':'');
+  if(!kolomTerpilih.length){
+    document.getElementById('hasilFilter').style.display='block';
+    document.getElementById('judulFilter').innerText='⚠️ Belum ada kolom dipilih';
+    document.getElementById('detailFilter').innerText='Centang minimal 1 kolom di bagian Pilih Kolom.';
+    document.getElementById('namaFileFilter').innerText=''; document.getElementById('isiFileInfo').innerText='';
+    document.getElementById('headPreview').innerHTML=''; document.getElementById('bodyPreview').innerHTML=''; document.getElementById('listPerDokter').innerHTML=''; return;
+  }
   if(!filtered.length){ document.getElementById('hasilFilter').style.display='block'; document.getElementById('judulFilter').innerText='😢 Tidak ada data'; document.getElementById('detailFilter').innerText='Coba ganti filter.'; document.getElementById('namaFileFilter').innerText=''; document.getElementById('isiFileInfo').innerText=''; document.getElementById('listPerDokter').innerHTML=''; return; }
   let totalKomisi=0; filtered.forEach(r=>{ totalKomisi+=Number(String(r[idx.komisi]).replace(/[^0-9.-]/g,''))||0; });
   let perDokter={}; filtered.forEach(r=>{ let d=String(r[idx.dokter]||'').trim()||'Tanpa Dokter'; if(!perDokter[d]) perDokter[d]=[]; perDokter[d].push(r); });
@@ -220,38 +303,40 @@ function terapkanFilter(){
   if(bln!=='SEMUA') judul += ' • '+bln;
   document.getElementById('hasilFilter').style.display='block';
   document.getElementById('judulFilter').innerText=judul;
-  document.getElementById('detailFilter').innerText=filtered.length+' baris • '+Object.keys(perDokter).length+' dokter • Total Komisi: Rp '+totalKomisi.toLocaleString('id-ID');
+  document.getElementById('detailFilter').innerText=filtered.length+' baris • '+Object.keys(perDokter).length+' dokter • '+headersTerpilih().length+' kolom terpilih • Total Komisi: Rp '+totalKomisi.toLocaleString('id-ID');
   document.getElementById('namaFileFilter').innerText='📄 '+namaFileExcel()+'.xlsx';
-  if(dok!=='SEMUA'){ document.getElementById('isiFileInfo').innerText='Isi file: 1 Sheet (transaction_date s/d komisi) + Total Komisi NEMPEL di bawah + tabel NRP / DOC NAME 2 / SUM of komisi.'; }
-  else { document.getElementById('isiFileInfo').innerText='Isi file: Sheet REKAP + 1 Sheet per dokter, tiap Sheet transaction_date s/d komisi + Total nempel + tabel NRP di bawah.'; }
-  let hU=headersUtama(); let rU=rowsUtama(filtered);
+  document.getElementById('isiFileInfo').innerText='Isi file: hanya kolom yang Kakak centang + Total Komisi nempel di bawah + tabel NRP / DOC NAME 2 / SUM of komisi.';
+  let hU=headersTerpilih(); let rU=rowsTerpilih(filtered);
   document.getElementById('headPreview').innerHTML='<tr>'+hU.map(h=>'<th>'+h+'</th>').join('')+'</tr>';
   document.getElementById('bodyPreview').innerHTML=rU.slice(0,5).map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('');
-  let html='<b>📋 Daftar dokter di filter ini (klik untuk download Excel 1 dokter itu aja):</b>';
+  let html='<b>📋 Daftar dokter di filter ini (klik untuk download Excel 1 dokter itu aja, dengan kolom terpilih):</b>';
   Object.keys(perDokter).sort().forEach(d=>{
     let arr=perDokter[d]; let tk=0; arr.forEach(r=>{ tk+=Number(String(r[idx.komisi]).replace(/[^0-9.-]/g,''))||0; });
     html+='<div class="group"><div><b>'+d+'</b><br><small>'+arr.length+' baris • Rp '+tk.toLocaleString('id-ID')+'</small></div><button class="dl" onclick="downloadSatuDokterExcel(\''+d.replace(/'/g,"\\'")+'\')">⬇️ Excel</button></div>';
   });
   document.getElementById('listPerDokter').innerHTML=html;
 }
-// === VERSI CEPAT — Total pakai ANGKA LANGSUNG (bukan rumus), jadi pasti muncul ===
 function downloadExcelCepat(){
   let filtered=rowsTerfilter(); if(!filtered.length) return alert('Tidak ada data!');
+  if(!kolomTerpilih.length) return alert('Pilih minimal 1 kolom dulu di bagian Pilih Kolom!');
   let dok=document.getElementById('filterDokter').value;
   let wb=XLSX.utils.book_new();
-  let hU=headersUtama(); let idxKomisi=indexKomisiDiUtama();
+  let hU=headersTerpilih(); let idxKomisi=indexKomisiDiTerpilih();
+  // Kalau komisi tidak dipilih, total ditaruh di kolom terakhir yang dipilih
+  let idxTotal = idxKomisi===-1 ? hU.length-1 : idxKomisi;
   function aoaUntuk(arr){
-    let rU=rowsUtama(arr);
+    let rU=rowsTerpilih(arr);
     let totalKomisi=0; arr.forEach(r=>{ totalKomisi+=Number(String(r[idx.komisi]).replace(/[^0-9.-]/g,''))||0; });
     let aoa=[hU, ...rU];
-    // Total — NEMPEL langsung di bawah baris terakhir (yang 0 itu)
-    let totalRow=new Array(hU.length).fill(''); totalRow[idxKomisi-1]='Total Komisi'; totalRow[idxKomisi]=totalKomisi;
+    let totalRow=new Array(hU.length).fill(''); totalRow[Math.max(0,idxTotal-1)]='Total Komisi'; totalRow[idxTotal]=totalKomisi;
     aoa.push(totalRow);
     aoa.push(new Array(hU.length).fill(''));
-    let headRekap=new Array(hU.length).fill(''); headRekap[idxKomisi-2]='NRP'; headRekap[idxKomisi-1]='DOC NAME 2'; headRekap[idxKomisi]='SUM of komisi';
+    // Rekap bawah — ditaruh di 3 kolom terakhir yang dipilih, biar tetap nempel di kanan
+    let c3=idxTotal, c2=Math.max(0,idxTotal-1), c1=Math.max(0,idxTotal-2);
+    let headRekap=new Array(hU.length).fill(''); headRekap[c1]='NRP'; headRekap[c2]='DOC NAME 2'; headRekap[c3]='SUM of komisi';
     aoa.push(headRekap);
     rekapPerDokter(arr).forEach(rk=>{
-      let row=new Array(hU.length).fill(''); row[idxKomisi-2]=rk.nrp; row[idxKomisi-1]=rk.dokter; row[idxKomisi]=rk.total;
+      let row=new Array(hU.length).fill(''); row[c1]=rk.nrp; row[c2]=rk.dokter; row[c3]=rk.total;
       aoa.push(row);
     });
     return aoa;
@@ -269,30 +354,29 @@ function downloadExcelCepat(){
   }
   XLSX.writeFile(wb, namaFileExcel()+'.xlsx');
 }
-// === VERSI RAPI — Total pakai ANGKA + KUNING, nempel di bawah ===
 function isiSheetRapi(ws, arrRows){
-  let hU=headersUtama(); let rU=rowsUtama(arrRows);
-  let idxKomisi=indexKomisiDiUtama();
-  // Hitung total dulu pakai angka langsung, biar pasti muncul walau rumus belum kehitung
+  let hU=headersTerpilih(); let rU=rowsTerpilih(arrRows);
+  let idxKomisi=indexKomisiDiTerpilih();
+  let idxTotal = idxKomisi===-1 ? hU.length-1 : idxKomisi;
   let totalKomisi=0; arrRows.forEach(r=>{ totalKomisi+=Number(String(r[idx.komisi]).replace(/[^0-9.-]/g,''))||0; });
   hU.forEach((h,i)=>{ ws.getColumn(i+1).width = Math.max(12, Math.min(35, String(h).length+4)); });
   let hr=ws.getRow(1); hU.forEach((h,i)=>{ let c=hr.getCell(i+1); c.value=h; c.font={name:'Calibri',size:11,bold:true}; c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFFF00'}}; });
-  rU.forEach((vals,ri)=>{ let row=ws.getRow(ri+2); vals.forEach((v,ci)=>{ row.getCell(ci+1).value=v; }); row.getCell(idxKomisi+1).numFmt='_-"Rp"* #,##0_-;-\"Rp\"* #,##0_-;_-\"Rp\"* \"-\"_-;_-@_-'; });
+  rU.forEach((vals,ri)=>{ let row=ws.getRow(ri+2); vals.forEach((v,ci)=>{ row.getCell(ci+1).value=v; }); if(idxKomisi!==-1) row.getCell(idxKomisi+1).numFmt='_-"Rp"* #,##0_-;-\"Rp\"* #,##0_-;_-\"Rp\"* \"-\"_-;_-@_-'; });
   let lastDataRow=rU.length+1; let totalRowNum=lastDataRow+1;
-  // 1) Total Komisi — NEMPEL langsung di bawah baris terakhir
   let tr=ws.getRow(totalRowNum);
-  tr.getCell(idxKomisi).value='Total Komisi'; tr.getCell(idxKomisi).font={bold:true}; tr.getCell(idxKomisi).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFFF00'}};
-  tr.getCell(idxKomisi+1).value=totalKomisi; // ANGKA LANGSUNG, bukan rumus
-  tr.getCell(idxKomisi+1).numFmt='_-"Rp"* #,##0_-;-\"Rp\"* #,##0_-;_-\"Rp\"* \"-\"_-;_-@_-'; tr.getCell(idxKomisi+1).font={bold:true}; tr.getCell(idxKomisi+1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFFF00'}};
-  // 2) Rekap bawah
+  let cLabel=Math.max(1, idxTotal); // kolom label Total (1-based)
+  let cNilai=idxTotal+1; // kolom nilai Total (1-based)
+  tr.getCell(cLabel).value='Total Komisi'; tr.getCell(cLabel).font={bold:true}; tr.getCell(cLabel).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFFF00'}};
+  tr.getCell(cNilai).value=totalKomisi;
+  tr.getCell(cNilai).numFmt='_-"Rp"* #,##0_-;-\"Rp\"* #,##0_-;_-\"Rp\"* \"-\"_-;_-@_-'; tr.getCell(cNilai).font={bold:true}; tr.getCell(cNilai).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFFF00'}};
   let rekapHeaderRowNum = totalRowNum + 2;
-  let cNRP = idxKomisi-1;
-  let cNama = idxKomisi;
-  let cSum = idxKomisi+1;
+  let cNRP = Math.max(1, cNilai-2);
+  let cNama = Math.max(1, cNilai-1);
+  let cSum = cNilai;
   let hr2=ws.getRow(rekapHeaderRowNum);
   ws.getColumn(cNama).width = Math.max(ws.getColumn(cNama).width||12, 22);
   ws.getColumn(cNRP).width = Math.max(ws.getColumn(cNRP).width||12, 16);
-  [['NRP',cNRP],['DOC NAME 2',cNama],['SUM of komisi',cSum]].forEach(([txt,col])=>{
+  [[ 'NRP',cNRP],['DOC NAME 2',cNama],['SUM of komisi',cSum]].forEach(([txt,col])=>{
     let c=hr2.getCell(col); c.value=txt; c.font={name:'Calibri',size:11,bold:true}; c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFFF00'}}; c.border={top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}};
   });
   let rekap = rekapPerDokter(arrRows);
@@ -307,6 +391,7 @@ function isiSheetRapi(ws, arrRows){
 }
 async function downloadExcelRapi(){
   let filtered=rowsTerfilter(); if(!filtered.length) return alert('Tidak ada data!');
+  if(!kolomTerpilih.length) return alert('Pilih minimal 1 kolom dulu!');
   setProg(50,'Bikin file Excel rapi...');
   let dok=document.getElementById('filterDokter').value;
   let wb=new ExcelJS.Workbook();
